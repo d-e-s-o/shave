@@ -46,7 +46,7 @@ pub(crate) enum Command {
   Screenshot(Screenshot),
 }
 
-/// An type representing the `screenshot` command.
+/// A type representing the `screenshot` command.
 #[derive(Debug, Arguments)]
 pub(crate) struct Screenshot {
   /// The URL to navigate to.

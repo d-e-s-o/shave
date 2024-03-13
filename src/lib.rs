@@ -8,20 +8,12 @@
   clippy::let_unit_value
 )]
 
-mod args;
-
-use std::ffi::OsString;
 use std::future::Future;
 use std::io;
-use std::path::PathBuf;
 use std::process::Stdio;
 
 use anyhow::Context as _;
 use anyhow::Result;
-
-use clap::Parser as _;
-
-use chrono::offset::Local;
 
 use hyper::client::HttpConnector;
 
@@ -32,17 +24,9 @@ use fantoccini::Client as WebdriverClient;
 use fantoccini::ClientBuilder;
 use fantoccini::Locator;
 
-use tokio::fs::write;
-use tokio::io::stdout;
-use tokio::io::AsyncWriteExt as _;
 use tokio::net::TcpSocket;
 use tokio::process;
 use tokio::process::Child;
-
-use crate::args::Args;
-use crate::args::Command;
-use crate::args::Output;
-use crate::args::Screenshot;
 
 
 /// Arguments to be passed to Chrome by default.
@@ -143,34 +127,48 @@ where
   .await
 }
 
-/// Handler for the `screenshot` command.
-async fn screenshot(screenshot: Screenshot) -> Result<()> {
-  let Screenshot {
-    url,
+
+/// A type capturing options for capturing a screenshot.
+#[derive(Clone, Debug, Default)]
+pub struct ScreenshotOpts {
+  /// The CSS selector describing an element to wait for before
+  /// capturing a screenshot.
+  pub await_selector: Option<String>,
+  /// The selector describing the element to screenshot.
+  pub selector: Option<String>,
+  /// The type is non-exhaustive and open to extension.
+  #[doc(hidden)]
+  pub _non_exhaustive: (),
+}
+
+
+/// Capture a screenshot in the form of a PNG image.
+pub async fn screenshot(url: &str, opts: &ScreenshotOpts) -> Result<Vec<u8>> {
+  let ScreenshotOpts {
     await_selector,
     selector,
-    output,
-  } = screenshot;
+    _non_exhaustive: (),
+  } = opts;
 
   let screenshot = with_fantoccini(|client| async {
     let () = client.set_window_size(3840, 2160).await?;
 
     let () = client
-      .goto(&url)
+      .goto(url)
       .await
       .with_context(|| format!("failed to navigate to {url}"))?;
 
     if let Some(await_selector) = await_selector {
       let _elem = client
         .wait()
-        .for_element(Locator::Css(&await_selector))
+        .for_element(Locator::Css(await_selector))
         .await
         .with_context(|| format!("failed to await `{await_selector}`"))?;
     }
 
     let screenshot = if let Some(selector) = selector {
       let element = client
-        .find(Locator::Css(&selector))
+        .find(Locator::Css(selector))
         .await
         .with_context(|| format!("failed to find `{selector}`"))?;
 
@@ -198,41 +196,5 @@ async fn screenshot(screenshot: Screenshot) -> Result<()> {
   })
   .await?;
 
-  let output = output.unwrap_or_else(|| {
-    let now = Local::now();
-    let path = PathBuf::from(format!("screenshot-{}.png", now.format("%+")));
-    Output::Path(path)
-  });
-
-  match output {
-    Output::Path(path) => write(&path, &screenshot)
-      .await
-      .with_context(|| format!("failed to write screenshot data to `{}`", path.display())),
-    Output::Stdout => stdout()
-      .write_all(&screenshot)
-      .await
-      .context("failed to write screenshot data to stdout"),
-  }
-}
-
-/// Run the program and report errors, if any.
-pub async fn run<A, T>(args: A) -> Result<()>
-where
-  A: IntoIterator<Item = T>,
-  T: Into<OsString> + Clone,
-{
-  let args = match Args::try_parse_from(args) {
-    Ok(args) => args,
-    Err(err) => match err.kind() {
-      clap::error::ErrorKind::DisplayHelp | clap::error::ErrorKind::DisplayVersion => {
-        print!("{}", err);
-        return Ok(())
-      },
-      _ => return Err(err).context("failed to parse program arguments"),
-    },
-  };
-
-  match args.command {
-    Command::Screenshot(screenshot) => self::screenshot(screenshot).await,
-  }
+  Ok(screenshot)
 }
