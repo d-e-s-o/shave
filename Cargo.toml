@@ -29,5 +29,10 @@ clap = { version = "4.1.4", default-features = false, features = ["color", "deri
 clap_complete = { version = "4.1.4", default-features = false, optional = true }
 fantoccini = { version = "0.20.0-rc.7", default-features = false }
 hyper = { version = "0.14", default-features = false, features = ["tcp"] }
+libc = { version = "0.2", default-features = false }
 serde_json = { version = "1.0.114", default-features = false, features = ["std"] }
-tokio = { version = "1.0", default-features = false, features = ["fs", "io-std", "io-util", "macros", "net", "process", "rt"] }
+tempfile = { version = "3.2", default-features = false }
+tokio = { version = "1.0", default-features = false, features = ["fs", "io-std", "io-util", "macros", "process", "rt", "time"] }
+
+[dev-dependencies]
+tokio = { version = "1.0", default-features = false, features = ["test-util"] }
