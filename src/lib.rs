@@ -8,10 +8,16 @@
   clippy::let_unit_value
 )]
 
-use std::future::Future;
-use std::io;
-use std::process::Stdio;
+mod socket;
+mod tcp;
 
+use std::collections::HashSet;
+use std::future::Future;
+use std::net::Ipv4Addr;
+use std::process::Stdio;
+use std::time::Duration;
+
+use anyhow::bail;
 use anyhow::Context as _;
 use anyhow::Result;
 
@@ -24,14 +30,21 @@ use fantoccini::Client as WebdriverClient;
 use fantoccini::ClientBuilder;
 use fantoccini::Locator;
 
-use tokio::net::TcpSocket;
+use tempfile::TempDir;
+
 use tokio::process;
 use tokio::process::Child;
+use tokio::time::sleep;
+use tokio::time::Instant;
+
+
+/// The timeout used when searching for a bound local port.
+const PORT_FIND_TIMEOUT: Duration = Duration::from_secs(30);
 
 
 /// Arguments to be passed to Chrome by default.
 /// See https://github.com/puppeteer/puppeteer/blob/4846b8723cf20d3551c0d755df394cc5e0c82a94/src/node/Launcher.ts#L157
-static CHROME_ARGS: [&str; 30] = [
+static CHROME_ARGS: [&str; 29] = [
   "--enable-features=NetworkService,NetworkServiceInProcess",
   "--disable-background-networking",
   "--disable-background-timer-throttling",
@@ -61,10 +74,42 @@ static CHROME_ARGS: [&str; 30] = [
   "--mute-audio",
   "--incognito",
   "--lang=en_US",
-  // TODO: This should probably be made different for each session?
-  "--user-data-dir=/tmp/chromedriver",
 ];
 
+
+async fn find_localhost_port(pid: u32) -> Result<u16> {
+  let start = Instant::now();
+
+  // Wait for the driver process to bind to a local host address.
+  let port = loop {
+    let inodes = socket::socket_inodes(pid)?.collect::<Result<HashSet<_>>>()?;
+    let result = tcp::parse(pid)?.find(|result| match result {
+      Ok(entry) => {
+        if inodes.contains(&entry.inode) {
+          entry.addr == Ipv4Addr::LOCALHOST
+        } else {
+          false
+        }
+      },
+      Err(_) => true,
+    });
+    match result {
+      None => {
+        if start.elapsed() >= PORT_FIND_TIMEOUT {
+          bail!("failed to find local host port for process {pid}");
+        }
+        sleep(Duration::from_millis(1)).await
+      },
+      Some(result) => {
+        break result
+          .context("failed to find localhost proc tcp entry")?
+          .port
+      },
+    }
+  };
+
+  Ok(port)
+}
 
 async fn with_child<F, T, Fut>(mut child: Child, f: F) -> Result<T>
 where
@@ -88,37 +133,29 @@ where
 {
   let chromium = "chromedriver";
   let webdriver = process::Command::new(chromium)
-    .arg("--port=9515")
+    .arg("--port=0")
     .stdout(Stdio::piped())
     .stderr(Stdio::piped())
     .spawn()
     .with_context(|| format!("failed to launch `{chromium}` instance"))?;
+  let pid = webdriver
+    .id()
+    .with_context(|| format!("spawned `{chromium}` process has no PID"))?;
 
   with_child(webdriver, || async {
-    let addr = "127.0.0.1:9515"
-      .parse()
-      .context("failed to parse `127.0.0.1:9515` as socket address")?;
-    // Error reporting from `fantoccini` and `hyper` is just braindead
-    // and there is no sensible way to detect a refused connection. So
-    // spin up a socket here to wait until the server is up and running.
-    let () = loop {
-      let socket = TcpSocket::new_v4()?;
-      match socket.connect(addr).await {
-        Err(err) if err.kind() == io::ErrorKind::ConnectionRefused => (),
-        // Ignore other errors as well as success. Ultimately we let the
-        // call below report the result.
-        _ => break,
-      }
-    };
-
-    let webdriver_url = "http://127.0.0.1:9515";
-    let opts = json!({"args": CHROME_ARGS});
+    let port = find_localhost_port(pid).await?;
+    let webdriver_url = format!("http://127.0.0.1:{port}");
+    let data_dir = TempDir::new().context("failed to create temporary directory")?;
+    let mut args = Vec::from(CHROME_ARGS);
+    let data_dir_arg = format!("--user-data-dir={}", data_dir.path().display());
+    let () = args.push(&data_dir_arg);
+    let opts = json!({"args": args});
     let mut capabilities = Capabilities::new();
     let _val = capabilities.insert("goog:chromeOptions".to_string(), opts);
 
     let client = ClientBuilder::new(HttpConnector::new())
       .capabilities(capabilities)
-      .connect(webdriver_url)
+      .connect(&webdriver_url)
       .await
       .with_context(|| format!("failed to connect to {webdriver_url}"))?;
 
@@ -197,4 +234,54 @@ pub async fn screenshot(url: &str, opts: &ScreenshotOpts) -> Result<Vec<u8>> {
   .await?;
 
   Ok(screenshot)
+}
+
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  use std::process;
+
+  use tokio::join;
+  use tokio::net::TcpListener;
+  use tokio::test;
+  use tokio::time::advance;
+  use tokio::time::pause;
+
+
+  /// Check that we can find a bound port on localhost.
+  #[test]
+  async fn localhost_port_finding() {
+    {
+      let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+      let addr = listener.local_addr().unwrap();
+      let port = find_localhost_port(process::id()).await.unwrap();
+      assert_eq!(port, addr.port());
+    }
+
+    // Test timeout in here as well, to make sure that we don't
+    // accidentally conflict with the bind above from another test.
+
+    {
+      let () = pause();
+
+      let fnd = find_localhost_port(process::id());
+      let adv = advance(PORT_FIND_TIMEOUT);
+      // NB: Tokio's `join` macro does not explicitly state the order in
+      //     which futures are polled. This code relies on the `fnd`
+      //     future being polled first, so that we have the start time
+      //     set *before* advancing the time. In current versions of
+      //     Tokio (1.36) this seems to always be the case.
+      let (result, ()) = join!(fnd, adv);
+
+      let err = result.unwrap_err();
+      assert!(
+        err
+          .to_string()
+          .contains("failed to find local host port for process"),
+        "{err}"
+      );
+    }
+  }
 }
