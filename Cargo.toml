@@ -1,8 +1,30 @@
 [package]
 name = "shave"
-version = "0.0.0"
+version = "0.1.0"
 edition = "2021"
 rust-version = "1.63"
+authors = ["Daniel Mueller <deso@posteo.net>"]
+license = "GPL-3.0-or-later"
+homepage = "https://github.com/d-e-s-o/shave"
+repository = "https://github.com/d-e-s-o/shave.git"
+readme = "README.md"
+categories = [
+  "accessibility",
+  "api-bindings",
+  "asynchronous",
+  "multimedia::images",
+  "web-programming",
+]
+keywords = [
+  "async",
+  "html",
+  "image",
+  "scraping",
+  "web",
+]
+description = """
+A library for ~~scraping~~ shaving data from websites.
+"""
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
