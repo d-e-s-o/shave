@@ -120,30 +120,11 @@ async fn find_localhost_port(pid: u32) -> Result<u16> {
 }
 
 
-/// A client for shaving data of websites.
-pub struct Client {
-  /// The WebDriver process (a `chromdriver` instance).
-  process: Child,
-  /// The WebDriver client object (communicating with the process).
-  webdriver: WebdriverClient,
-}
+/// A builder for configurable construction of [`Client`] objects.
+#[derive(Debug, Default)]
+pub struct Builder;
 
-impl Client {
-  /// Instantiate a new `Client`.
-  pub async fn new() -> Result<Self> {
-    let process = process::Command::new(CHROME_DRIVER)
-      .arg("--port=0")
-      .stdout(Stdio::piped())
-      .stderr(Stdio::piped())
-      .kill_on_drop(true)
-      .spawn()
-      .with_context(|| format!("failed to launch `{CHROME_DRIVER}` instance"))?;
-
-    let webdriver = Self::connect(&process).await?;
-    let slf = Self { process, webdriver };
-    Ok(slf)
-  }
-
+impl Builder {
   async fn connect(process: &Child) -> Result<WebdriverClient> {
     let pid = process
       .id()
@@ -165,6 +146,43 @@ impl Client {
       .with_context(|| format!("failed to connect to {webdriver_url}"))?;
 
     Ok(client)
+  }
+
+  /// Create the [`Client`] object.
+  pub async fn build(self) -> Result<Client> {
+    let process = process::Command::new(CHROME_DRIVER)
+      .arg("--port=0")
+      .stdout(Stdio::piped())
+      .stderr(Stdio::piped())
+      .kill_on_drop(true)
+      .spawn()
+      .with_context(|| format!("failed to launch `{CHROME_DRIVER}` instance"))?;
+
+    let webdriver = Self::connect(&process).await?;
+    let slf = Client { process, webdriver };
+    Ok(slf)
+  }
+}
+
+
+/// A client for shaving data of websites.
+pub struct Client {
+  /// The WebDriver process (a `chromdriver` instance).
+  process: Child,
+  /// The WebDriver client object (communicating with the process).
+  webdriver: WebdriverClient,
+}
+
+impl Client {
+  /// Instantiate a new `Client`.
+  pub async fn new() -> Result<Self> {
+    Builder.build().await
+  }
+
+  /// Retrieve a [`Builder`] object for configurable construction of a
+  /// [`Client`].
+  pub fn builder() -> Builder {
+    Builder
   }
 
   /// Destroy the `Client` object, freeing up all resources.
