@@ -38,6 +38,9 @@ impl FromStr for Output {
 pub(crate) struct Args {
   #[command(subcommand)]
   pub command: Command,
+  /// Set the user agent to use.
+  #[clap(long, global = true)]
+  pub user_agent: Option<String>,
 }
 
 #[derive(Debug, Subcommand)]
