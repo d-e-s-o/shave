@@ -15,7 +15,7 @@ use fantoccini::Client as WebdriverClient;
 use fantoccini::ClientBuilder;
 use fantoccini::Locator;
 
-use hyper::client::HttpConnector;
+use hyper_util::client::legacy::connect::HttpConnector;
 
 use serde_json::json;
 
