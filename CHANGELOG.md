@@ -1,5 +1,5 @@
-Unreleased
-----------
+0.2.1
+-----
 - Updated `fantoccini` dependency to `0.21`
 
 
