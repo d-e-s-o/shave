@@ -1,3 +1,8 @@
+Unreleased
+----------
+- Added `remove_selector` attribute to `ScreenshotOpts`
+
+
 0.2.1
 -----
 - Updated `fantoccini` dependency to `0.21`

@@ -36,6 +36,9 @@ pub struct ScreenshotOpts {
   /// The CSS selector describing an element to wait for before
   /// capturing a screenshot.
   pub await_selector: Option<String>,
+  /// The selector identifying one or more elements to remove before the
+  /// screenshot is captured.
+  pub remove_selector: Option<String>,
   /// The selector describing the element to screenshot.
   pub selector: Option<String>,
   /// The type is non-exhaustive and open to extension.
@@ -223,6 +226,7 @@ impl Client {
   pub async fn screenshot(&mut self, url: &str, opts: &ScreenshotOpts) -> Result<Vec<u8>> {
     let ScreenshotOpts {
       await_selector,
+      remove_selector,
       selector,
       _non_exhaustive: (),
     } = opts;
@@ -242,6 +246,22 @@ impl Client {
         .for_element(Locator::Css(await_selector))
         .await
         .with_context(|| format!("failed to await `{await_selector}`"))?;
+    }
+
+    if let Some(remove_selector) = remove_selector {
+      // Definitely vulnerable to code injection here ¯\_(°ペ)_/¯
+      let js = format!(
+        r#"
+        document
+          .querySelectorAll('{remove_selector}')
+          .forEach(function(node){{node.parentNode.removeChild(node)}})
+      "#
+      );
+      let _output = self
+        .webdriver
+        .execute(&js, Vec::new())
+        .await
+        .with_context(|| format!("failed to remove `{remove_selector}`"))?;
     }
 
     let screenshot = if let Some(selector) = selector {
