@@ -30,6 +30,7 @@ use crate::args::Screenshot;
 async fn screenshot(mut client: Client, screenshot: Screenshot) -> Result<()> {
   let Screenshot {
     url,
+    window_size,
     await_selector,
     remove_selector,
     selector,
@@ -37,6 +38,7 @@ async fn screenshot(mut client: Client, screenshot: Screenshot) -> Result<()> {
   } = screenshot;
 
   let opts = shave::ScreenshotOpts {
+    window_size,
     await_selector,
     remove_selector,
     selector,

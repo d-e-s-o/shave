@@ -4,6 +4,8 @@
 use std::path::PathBuf;
 use std::str::FromStr;
 
+use anyhow::ensure;
+use anyhow::Context as _;
 use anyhow::Error;
 use anyhow::Result;
 
@@ -32,6 +34,29 @@ impl FromStr for Output {
 }
 
 
+/// Parse a window size specification from a string.
+fn parse_window_size(s: &str) -> Result<(usize, usize)> {
+  let mut it = s.split(&['x', ',', ' ']);
+  let w_str = it
+    .next()
+    .context("failed to find width coordinate in provided window size")?;
+  let h_str = it
+    .next()
+    .context("failed to find height coordinate in provided window size")?;
+
+  ensure!(
+    it.next().is_none(),
+    "unable to parse window size; encountered trailing input"
+  );
+
+  let w = usize::from_str(w_str)
+    .with_context(|| format!("failed to parse width string `{w_str}` as number"))?;
+  let h = usize::from_str(h_str)
+    .with_context(|| format!("failed to parse height string `{w_str}` as number"))?;
+  Ok((w, h))
+}
+
+
 /// A program for shaving data from a URL.
 #[derive(Debug, Parser)]
 #[clap(version = env!("VERSION"))]
@@ -54,6 +79,9 @@ pub(crate) enum Command {
 pub(crate) struct Screenshot {
   /// The URL to navigate to.
   pub url: String,
+  /// The dimensions (WxH) of the window to configure, in pixels.
+  #[clap(short, long, value_parser = parse_window_size)]
+  pub window_size: Option<(usize, usize)>,
   /// The CSS selector describing an element to wait for before
   /// capturing a screenshot.
   #[clap(short, long)]
@@ -78,6 +106,14 @@ pub(crate) struct Screenshot {
 mod tests {
   use super::*;
 
+
+  /// Check that we can parse a window size specification.
+  #[test]
+  fn window_size_parsing() {
+    assert_eq!(parse_window_size("1,2").unwrap(), (1, 2));
+    assert_eq!(parse_window_size("3000x2000").unwrap(), (3000, 2000));
+    assert_eq!(parse_window_size("3840 2160").unwrap(), (3840, 2160));
+  }
 
   /// Check that we can parse an [`Output`] object from a string.
   #[test]
