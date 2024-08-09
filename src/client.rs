@@ -33,6 +33,8 @@ use crate::tcp;
 /// A type encompassing options for capturing a screenshot.
 #[derive(Clone, Debug, Default)]
 pub struct ScreenshotOpts {
+  /// The dimensions of the window to configure, in pixels.
+  pub window_size: Option<(usize, usize)>,
   /// The CSS selector describing an element to wait for before
   /// capturing a screenshot.
   pub await_selector: Option<String>,
@@ -225,13 +227,15 @@ impl Client {
   /// Capture a screenshot in the form of a PNG image.
   pub async fn screenshot(&mut self, url: &str, opts: &ScreenshotOpts) -> Result<Vec<u8>> {
     let ScreenshotOpts {
+      window_size,
       await_selector,
       remove_selector,
       selector,
       _non_exhaustive: (),
     } = opts;
 
-    let () = self.webdriver.set_window_size(3840, 2160).await?;
+    let (w, h) = window_size.unwrap_or((3840, 2160));
+    let () = self.webdriver.set_window_size(w as _, h as _).await?;
 
     let () = self
       .webdriver

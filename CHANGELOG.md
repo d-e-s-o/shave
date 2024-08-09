@@ -1,6 +1,6 @@
 Unreleased
 ----------
-- Added `remove_selector` attribute to `ScreenshotOpts`
+- Added `remove_selector` and `window_size` attributes to `ScreenshotOpts`
 
 
 0.2.1
