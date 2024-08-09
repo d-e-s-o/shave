@@ -31,12 +31,14 @@ async fn screenshot(mut client: Client, screenshot: Screenshot) -> Result<()> {
   let Screenshot {
     url,
     await_selector,
+    remove_selector,
     selector,
     output,
   } = screenshot;
 
   let opts = shave::ScreenshotOpts {
     await_selector,
+    remove_selector,
     selector,
     _non_exhaustive: (),
   };

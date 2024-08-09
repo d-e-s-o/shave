@@ -58,6 +58,10 @@ pub(crate) struct Screenshot {
   /// capturing a screenshot.
   #[clap(short, long)]
   pub await_selector: Option<String>,
+  /// The selector identifying one or more elements to remove before the
+  /// screenshot is captured.
+  #[clap(short, long)]
+  pub remove_selector: Option<String>,
   /// The selector describing the element to screenshot.
   #[clap(short, long)]
   pub selector: Option<String>,
