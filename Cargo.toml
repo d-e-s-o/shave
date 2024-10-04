@@ -23,7 +23,7 @@ keywords = [
   "web",
 ]
 description = """
-A library for ~~scraping~~ shaving data from websites.
+A library for shaving data from websites.
 """
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

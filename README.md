@@ -7,6 +7,7 @@ shave
 =====
 
 - [Documentation][docs-rs]
+- [Changelog](CHANGELOG.md)
 
 A library for ~~scraping~~ shaving data from websites.
 

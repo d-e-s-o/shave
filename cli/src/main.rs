@@ -39,7 +39,17 @@ async fn screenshot(screenshot: Screenshot) -> Result<()> {
     _non_exhaustive: (),
   };
 
-  let screenshot = shave::screenshot(&url, &opts).await?;
+  let mut client = shave::Client::new()
+    .await
+    .context("failed to instantiate `shave` client")?;
+  let screenshot = client
+    .screenshot(&url, &opts)
+    .await
+    .with_context(|| format!("failed to capture screenshot of `{url}`"))?;
+  let () = client
+    .destroy()
+    .await
+    .context("failed to destroy `shave` client")?;
 
   let output = output.unwrap_or_else(|| {
     let now = Local::now();
