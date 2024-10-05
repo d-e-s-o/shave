@@ -122,10 +122,19 @@ async fn find_localhost_port(pid: u32) -> Result<u16> {
 
 /// A builder for configurable construction of [`Client`] objects.
 #[derive(Debug, Default)]
-pub struct Builder;
+pub struct Builder {
+  /// The user agent to use.
+  user_agent: Option<String>,
+}
 
 impl Builder {
-  async fn connect(process: &Child) -> Result<WebdriverClient> {
+  /// Set/reset the user agent to use.
+  pub fn set_user_agent(mut self, user_agent: Option<String>) -> Self {
+    self.user_agent = user_agent;
+    self
+  }
+
+  async fn connect(&self, process: &Child) -> Result<WebdriverClient> {
     let pid = process
       .id()
       .with_context(|| format!("spawned `{CHROME_DRIVER}` process has no PID"))?;
@@ -135,6 +144,13 @@ impl Builder {
     let mut args = Vec::from(CHROME_ARGS);
     let data_dir_arg = format!("--user-data-dir={}", data_dir.path().display());
     let () = args.push(&data_dir_arg);
+
+    let user_agent_arg;
+    if let Some(user_agent) = &self.user_agent {
+      user_agent_arg = format!("--user-agent={user_agent}");
+      let () = args.push(&user_agent_arg);
+    }
+
     let opts = json!({"args": args});
     let mut capabilities = Capabilities::new();
     let _val = capabilities.insert("goog:chromeOptions".to_string(), opts);
@@ -158,7 +174,7 @@ impl Builder {
       .spawn()
       .with_context(|| format!("failed to launch `{CHROME_DRIVER}` instance"))?;
 
-    let webdriver = Self::connect(&process).await?;
+    let webdriver = self.connect(&process).await?;
     let slf = Client { process, webdriver };
     Ok(slf)
   }
@@ -176,13 +192,13 @@ pub struct Client {
 impl Client {
   /// Instantiate a new `Client`.
   pub async fn new() -> Result<Self> {
-    Builder.build().await
+    Builder::default().build().await
   }
 
   /// Retrieve a [`Builder`] object for configurable construction of a
   /// [`Client`].
   pub fn builder() -> Builder {
-    Builder
+    Builder::default()
   }
 
   /// Destroy the `Client` object, freeing up all resources.
