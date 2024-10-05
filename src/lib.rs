@@ -12,5 +12,6 @@ mod client;
 mod socket;
 mod tcp;
 
+pub use client::Builder;
 pub use client::Client;
 pub use client::ScreenshotOpts;
