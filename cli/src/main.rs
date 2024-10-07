@@ -14,6 +14,8 @@ use clap::Parser as _;
 
 use chrono::offset::Local;
 
+use shave::Client;
+
 use tokio::fs::write;
 use tokio::io::stdout;
 use tokio::io::AsyncWriteExt as _;
@@ -25,7 +27,7 @@ use crate::args::Screenshot;
 
 
 /// Handler for the `screenshot` command.
-async fn screenshot(screenshot: Screenshot) -> Result<()> {
+async fn screenshot(mut client: Client, screenshot: Screenshot) -> Result<()> {
   let Screenshot {
     url,
     await_selector,
@@ -39,9 +41,6 @@ async fn screenshot(screenshot: Screenshot) -> Result<()> {
     _non_exhaustive: (),
   };
 
-  let mut client = shave::Client::new()
-    .await
-    .context("failed to instantiate `shave` client")?;
   let screenshot = client
     .screenshot(&url, &opts)
     .await
@@ -85,8 +84,14 @@ where
     },
   };
 
+  let client = shave::Client::builder()
+    .set_user_agent(args.user_agent)
+    .build()
+    .await
+    .context("failed to instantiate `shave` client")?;
+
   match args.command {
-    Command::Screenshot(screenshot) => self::screenshot(screenshot).await,
+    Command::Screenshot(screenshot) => self::screenshot(client, screenshot).await,
   }
 }
 
