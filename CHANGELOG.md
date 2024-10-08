@@ -1,5 +1,5 @@
-Unreleased
-----------
+0.2.0
+-----
 - Introduced `Client` type providing previously freestanding
   `screenshot` functionality
   - Added `Builder` type for configurable `Client` creation
