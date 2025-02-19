@@ -1,14 +1,12 @@
-// Copyright (C) 2024 Daniel Mueller <deso@posteo.net>
+// Copyright (C) 2024-2025 Daniel Mueller <deso@posteo.net>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use std::collections::HashSet;
-use std::net::Ipv4Addr;
-use std::process::Stdio;
-use std::time::Duration;
+use std::net::SocketAddr;
 
-use anyhow::bail;
 use anyhow::Context as _;
 use anyhow::Result;
+
+use chromedriver_launch::Chromedriver;
 
 use fantoccini::wd::Capabilities;
 use fantoccini::Client as WebdriverClient;
@@ -20,14 +18,6 @@ use hyper_util::client::legacy::connect::HttpConnector;
 use serde_json::json;
 
 use tempfile::TempDir;
-
-use tokio::process;
-use tokio::process::Child;
-use tokio::time::sleep;
-use tokio::time::Instant;
-
-use crate::socket;
-use crate::tcp;
 
 
 /// A type encompassing options for capturing a screenshot.
@@ -47,12 +37,6 @@ pub struct ScreenshotOpts {
   #[doc(hidden)]
   pub _non_exhaustive: (),
 }
-
-
-/// The name of the `chromedriver` binary.
-const CHROME_DRIVER: &str = "chromedriver";
-/// The timeout used when searching for a bound local port.
-const PORT_FIND_TIMEOUT: Duration = Duration::from_secs(30);
 
 
 /// Arguments to be passed to Chrome by default.
@@ -90,41 +74,6 @@ static CHROME_ARGS: [&str; 29] = [
 ];
 
 
-async fn find_localhost_port(pid: u32) -> Result<u16> {
-  let start = Instant::now();
-
-  // Wait for the driver process to bind to a local host address.
-  let port = loop {
-    let inodes = socket::socket_inodes(pid)?.collect::<Result<HashSet<_>>>()?;
-    let result = tcp::parse(pid)?.find(|result| match result {
-      Ok(entry) => {
-        if inodes.contains(&entry.inode) {
-          entry.addr == Ipv4Addr::LOCALHOST
-        } else {
-          false
-        }
-      },
-      Err(_) => true,
-    });
-    match result {
-      None => {
-        if start.elapsed() >= PORT_FIND_TIMEOUT {
-          bail!("failed to find local host port for process {pid}");
-        }
-        sleep(Duration::from_millis(1)).await
-      },
-      Some(result) => {
-        break result
-          .context("failed to find localhost proc tcp entry")?
-          .port
-      },
-    }
-  };
-
-  Ok(port)
-}
-
-
 /// A builder for configurable construction of [`Client`] objects.
 #[derive(Debug, Default)]
 pub struct Builder {
@@ -139,12 +88,8 @@ impl Builder {
     self
   }
 
-  async fn connect(&self, process: &Child) -> Result<WebdriverClient> {
-    let pid = process
-      .id()
-      .with_context(|| format!("spawned `{CHROME_DRIVER}` process has no PID"))?;
-    let port = find_localhost_port(pid).await?;
-    let webdriver_url = format!("http://127.0.0.1:{port}");
+  async fn connect(&self, addr: SocketAddr) -> Result<WebdriverClient> {
+    let webdriver_url = format!("http://{addr}");
     let data_dir = TempDir::new().context("failed to create temporary directory")?;
     let mut args = Vec::from(CHROME_ARGS);
     let data_dir_arg = format!("--user-data-dir={}", data_dir.path().display());
@@ -171,16 +116,12 @@ impl Builder {
 
   /// Create the [`Client`] object.
   pub async fn build(self) -> Result<Client> {
-    let process = process::Command::new(CHROME_DRIVER)
-      .arg("--port=0")
-      .stdout(Stdio::piped())
-      .stderr(Stdio::piped())
-      .kill_on_drop(true)
-      .spawn()
-      .with_context(|| format!("failed to launch `{CHROME_DRIVER}` instance"))?;
-
-    let webdriver = self.connect(&process).await?;
-    let slf = Client { process, webdriver };
+    let chromedriver = Chromedriver::launch()?;
+    let webdriver = self.connect(chromedriver.socket_addr()).await?;
+    let slf = Client {
+      chromedriver,
+      webdriver,
+    };
     Ok(slf)
   }
 }
@@ -188,8 +129,8 @@ impl Builder {
 
 /// A client for shaving data of websites.
 pub struct Client {
-  /// The WebDriver process (a `chromdriver` instance).
-  process: Child,
+  /// The Chromedriver process.
+  chromedriver: Chromedriver,
   /// The WebDriver client object (communicating with the process).
   webdriver: WebdriverClient,
 }
@@ -208,7 +149,7 @@ impl Client {
 
   /// Destroy the `Client` object, freeing up all resources.
   #[inline]
-  pub async fn destroy(mut self) -> Result<()> {
+  pub async fn destroy(self) -> Result<()> {
     let () = self
       .webdriver
       .close()
@@ -216,10 +157,9 @@ impl Client {
       .context("failed to close webdriver client connection")?;
 
     let () = self
-      .process
-      .kill()
-      .await
-      .context("failed to shut down webdriver process")?;
+      .chromedriver
+      .destroy()
+      .context("failed to shut down chromedriver process")?;
 
     Ok(())
   }
@@ -292,55 +232,5 @@ impl Client {
     };
 
     Ok(screenshot)
-  }
-}
-
-
-#[cfg(test)]
-mod tests {
-  use super::*;
-
-  use std::process;
-
-  use tokio::join;
-  use tokio::net::TcpListener;
-  use tokio::test;
-  use tokio::time::advance;
-  use tokio::time::pause;
-
-
-  /// Check that we can find a bound port on localhost.
-  #[test]
-  async fn localhost_port_finding() {
-    {
-      let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
-      let addr = listener.local_addr().unwrap();
-      let port = find_localhost_port(process::id()).await.unwrap();
-      assert_eq!(port, addr.port());
-    }
-
-    // Test timeout in here as well, to make sure that we don't
-    // accidentally conflict with the bind above from another test.
-
-    {
-      let () = pause();
-
-      let fnd = find_localhost_port(process::id());
-      let adv = advance(PORT_FIND_TIMEOUT);
-      // NB: Tokio's `join` macro does not explicitly state the order in
-      //     which futures are polled. This code relies on the `fnd`
-      //     future being polled first, so that we have the start time
-      //     set *before* advancing the time. In current versions of
-      //     Tokio (1.36) this seems to always be the case.
-      let (result, ()) = join!(fnd, adv);
-
-      let err = result.unwrap_err();
-      assert!(
-        err
-          .to_string()
-          .contains("failed to find local host port for process"),
-        "{err}"
-      );
-    }
   }
 }

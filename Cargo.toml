@@ -30,12 +30,10 @@ A library for shaving data from websites.
 
 [dependencies]
 anyhow = { version = "1.0.80", default-features = false, features = ["std"] }
+chromedriver-launch = { version = "0.1", default-features = false }
 fantoccini = { version = "0.21", default-features = false }
 hyper-util = { version = "0.1.6", default-features = false, features = ["client-legacy"] }
 libc = { version = "0.2", default-features = false }
 serde_json = { version = "1.0.114", default-features = false, features = ["std"] }
 tempfile = { version = "3.2", default-features = false }
-tokio = { version = "1.13", default-features = false, features = ["process", "time"] }
-
-[dev-dependencies]
-tokio = { version = "1.0", default-features = false, features = ["macros", "test-util"] }
+tokio = { version = "1.13", default-features = false, features = ["time"] }

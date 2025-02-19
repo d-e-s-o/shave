@@ -1,3 +1,9 @@
+Unreleased
+----------
+- Switched over to `chromedriver-launch` crate for Chromedriver process
+  management
+
+
 0.2.2
 -----
 - Added `remove_selector` and `window_size` attributes to `ScreenshotOpts`
