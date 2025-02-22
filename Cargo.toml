@@ -7,6 +7,7 @@ authors = ["Daniel Mueller <deso@posteo.net>"]
 license = "GPL-3.0-or-later"
 homepage = "https://github.com/d-e-s-o/shave"
 repository = "https://github.com/d-e-s-o/shave.git"
+documentation = "https://docs.rs/shave"
 readme = "README.md"
 categories = [
   "accessibility",
