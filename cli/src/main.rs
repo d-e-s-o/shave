@@ -1,4 +1,4 @@
-// Copyright (C) 2024 Daniel Mueller <deso@posteo.net>
+// Copyright (C) 2024-2025 Daniel Mueller <deso@posteo.net>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 mod args;
@@ -45,14 +45,12 @@ async fn screenshot(mut client: Client, screenshot: Screenshot) -> Result<()> {
     _non_exhaustive: (),
   };
 
-  let screenshot = client
-    .screenshot(&url, &opts)
-    .await
-    .with_context(|| format!("failed to capture screenshot of `{url}`"))?;
+  let result = client.screenshot(&url, &opts).await;
   let () = client
     .destroy()
     .await
     .context("failed to destroy `shave` client")?;
+  let screenshot = result.with_context(|| format!("failed to capture screenshot of `{url}`"))?;
 
   let output = output.unwrap_or_else(|| {
     let now = Local::now();
