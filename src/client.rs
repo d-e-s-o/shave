@@ -41,7 +41,7 @@ pub struct ScreenshotOpts {
 
 /// Arguments to be passed to Chrome by default.
 /// See https://github.com/puppeteer/puppeteer/blob/4846b8723cf20d3551c0d755df394cc5e0c82a94/src/node/Launcher.ts#L157
-static CHROME_ARGS: [&str; 29] = [
+static CHROME_ARGS: [&str; 31] = [
   "--enable-features=NetworkService,NetworkServiceInProcess",
   "--disable-background-networking",
   "--disable-background-timer-throttling",
@@ -58,8 +58,12 @@ static CHROME_ARGS: [&str; 29] = [
   "--disable-popup-blocking",
   "--disable-prompt-on-repost",
   "--disable-renderer-backgrounding",
+  "--disable-setuid-sandbox",
   "--disable-sync",
   "--metrics-recording-only",
+  // `--no-sandbox` is required in case we are running as root and we do
+  // not want to impose arbitrary restrictions.
+  "--no-sandbox",
   "--no-first-run",
   "--enable-automation",
   "--password-store=basic",
