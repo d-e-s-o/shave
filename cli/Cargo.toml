@@ -11,13 +11,6 @@ name = "shell-complete"
 path = "var/shell-complete.rs"
 required-features = ["clap_complete"]
 
-[profile.release]
-opt-level = "z"
-lto = true
-codegen-units = 1
-incremental = false
-panic = "abort"
-
 [build-dependencies]
 anyhow = "1.0.68"
 grev = "0.1.3"
