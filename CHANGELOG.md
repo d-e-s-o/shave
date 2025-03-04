@@ -1,5 +1,5 @@
-Unreleased
-----------
+0.2.3
+-----
 - Switched over to `chromedriver-launch` crate for Chromedriver process
   management
 - Adjusted `chromedriver` flags
