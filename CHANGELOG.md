@@ -1,3 +1,8 @@
+Unreleased
+----------
+- Fixed leakage of temporary Chrome data directory
+
+
 0.2.3
 -----
 - Switched over to `chromedriver-launch` crate for Chromedriver process

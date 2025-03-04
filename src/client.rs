@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 use std::net::SocketAddr;
+use std::path::Path;
 
 use anyhow::Context as _;
 use anyhow::Result;
@@ -94,11 +95,10 @@ impl Builder {
     self
   }
 
-  async fn connect(&self, addr: SocketAddr) -> Result<WebdriverClient> {
+  async fn connect(&self, addr: SocketAddr, data_dir: &Path) -> Result<WebdriverClient> {
     let webdriver_url = format!("http://{addr}");
-    let data_dir = TempDir::new().context("failed to create temporary directory")?;
     let mut args = Vec::from(CHROME_ARGS);
-    let data_dir_arg = format!("--user-data-dir={}", data_dir.path().display());
+    let data_dir_arg = format!("--user-data-dir={}", data_dir.display());
     let () = args.push(&data_dir_arg);
 
     let user_agent_arg;
@@ -123,10 +123,14 @@ impl Builder {
   /// Create the [`Client`] object.
   pub async fn build(self) -> Result<Client> {
     let chromedriver = Chromedriver::launch()?;
-    let webdriver = self.connect(chromedriver.socket_addr()).await?;
+    let data_dir = TempDir::new().context("failed to create temporary directory")?;
+    let webdriver = self
+      .connect(chromedriver.socket_addr(), data_dir.path())
+      .await?;
     let slf = Client {
       chromedriver,
       webdriver,
+      data_dir,
     };
     Ok(slf)
   }
@@ -139,6 +143,8 @@ pub struct Client {
   chromedriver: Chromedriver,
   /// The WebDriver client object (communicating with the process).
   webdriver: WebdriverClient,
+  /// The data directory for the Chrome instance.
+  data_dir: TempDir,
 }
 
 impl Client {
@@ -166,6 +172,12 @@ impl Client {
       .chromedriver
       .destroy()
       .context("failed to shut down chromedriver process")?;
+
+    let path = self.data_dir.path().to_path_buf();
+    let () = self
+      .data_dir
+      .close()
+      .with_context(|| format!("failed to remove data directory `{}`", path.display()))?;
 
     Ok(())
   }
