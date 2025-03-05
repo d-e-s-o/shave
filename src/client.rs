@@ -43,13 +43,14 @@ pub struct ScreenshotOpts {
 /// Arguments to be passed to Chrome by default.
 /// See https://github.com/puppeteer/puppeteer/blob/4846b8723cf20d3551c0d755df394cc5e0c82a94/src/node/Launcher.ts#L157
 static CHROME_ARGS: [&str; 33] = [
-  "--enable-features=NetworkService,NetworkServiceInProcess",
   "--disable-background-networking",
   "--disable-background-timer-throttling",
   "--disable-backgrounding-occluded-windows",
+  "--disable-blink-features",
+  "--disable-blink-features=AutomationControlled",
   "--disable-breakpad",
-  "--disable-client-side-phishing-detection",
   "--disable-browser-side-navigation",
+  "--disable-client-side-phishing-detection",
   "--disable-component-extensions-with-background-pages",
   "--disable-default-apps",
   "--disable-dev-shm-usage",
@@ -63,21 +64,20 @@ static CHROME_ARGS: [&str; 33] = [
   "--disable-renderer-backgrounding",
   "--disable-setuid-sandbox",
   "--disable-sync",
+  "--enable-automation",
+  "--enable-features=NetworkService,NetworkServiceInProcess",
+  "--headless",
+  "--hide-scrollbars",
+  "--incognito",
+  "--lang=en_US",
   "--metrics-recording-only",
+  "--mute-audio",
+  "--no-first-run",
   // `--no-sandbox` is required in case we are running as root and we do
   // not want to impose arbitrary restrictions.
   "--no-sandbox",
-  "--no-first-run",
-  "--enable-automation",
   "--password-store=basic",
   "--use-mock-keychain",
-  "--disable-blink-features",
-  "--disable-blink-features=AutomationControlled",
-  "--headless",
-  "--hide-scrollbars",
-  "--mute-audio",
-  "--incognito",
-  "--lang=en_US",
 ];
 
 
