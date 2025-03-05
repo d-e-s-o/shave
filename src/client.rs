@@ -42,7 +42,7 @@ pub struct ScreenshotOpts {
 
 /// Arguments to be passed to Chrome by default.
 /// See https://github.com/puppeteer/puppeteer/blob/4846b8723cf20d3551c0d755df394cc5e0c82a94/src/node/Launcher.ts#L157
-static CHROME_ARGS: [&str; 33] = [
+static CHROME_ARGS: [&str; 32] = [
   "--disable-background-networking",
   "--disable-background-timer-throttling",
   "--disable-backgrounding-occluded-windows",
@@ -53,7 +53,6 @@ static CHROME_ARGS: [&str; 33] = [
   "--disable-client-side-phishing-detection",
   "--disable-component-extensions-with-background-pages",
   "--disable-default-apps",
-  "--disable-dev-shm-usage",
   "--disable-extensions",
   "--disable-features=TranslateUI",
   "--disable-gpu",
