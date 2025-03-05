@@ -41,41 +41,127 @@ pub struct ScreenshotOpts {
 
 
 /// Arguments to be passed to Chrome by default.
-/// See https://github.com/puppeteer/puppeteer/blob/4846b8723cf20d3551c0d755df394cc5e0c82a94/src/node/Launcher.ts#L157
-static CHROME_ARGS: [&str; 32] = [
+/// See https://gist.github.com/rihardn/47b8e6170dc8f57a998c90b12a3e01bb
+static CHROME_ARGS: [&str; 53] = [
+  // All pop-ups and calls to window.open will fail.
+  "--block-new-web-contents",
+  // Disable various background network services, including extension
+  // updating,safe browsing service, upgrade detector, translate, UMA.
   "--disable-background-networking",
+  // Disable timers being throttled in background pages/tabs.
   "--disable-background-timer-throttling",
+  // Normally, Chrome will treat a 'foreground' tab instead as
+  // backgrounded if the surrounding window is occluded (aka visually
+  // covered) by another window. This flag disables that.
   "--disable-backgrounding-occluded-windows",
   "--disable-blink-features",
   "--disable-blink-features=AutomationControlled",
+  // Disable crashdump collection.
   "--disable-breakpad",
   "--disable-browser-side-navigation",
+  // Disables client-side phishing detection.
   "--disable-client-side-phishing-detection",
+  // Disable some built-in extensions that aren't affected by
+  // `--disable-extensions`.
   "--disable-component-extensions-with-background-pages",
+  // Don't update the browser 'components' listed at
+  // chrome://components/.
+  "--disable-component-update",
+  // Disable installation of default apps.
   "--disable-default-apps",
+  // Disables Domain Reliability Monitoring, which tracks whether the
+  // browser has difficulty contacting Google-owned sites and uploads
+  // reports to Google.
+  "--disable-domain-reliability",
+  // Disable all chrome extensions.
   "--disable-extensions",
+  // Disallow opening links in external applications.
+  "--disable-external-intent-requests",
+  // Disables (mostly for hermetic testing) autofill server communication.
+  "--disable-features=AutofillServerCommunication",
+  // Disable the feature of: Calculate window occlusion on Windows will
+  // be used in the future to throttle and potentially unload foreground
+  // tabs in occluded windows.
+  "--disable-features=CalculateNativeWinOcclusion",
+  // Hide toolbar button that opens dialog for controlling media
+  // sessions.
+  "--disable-features=GlobalMediaControls",
+  // Disables an improved UI for third-party cookie blocking in
+  // incognito mode.
+  "--disable-features=ImprovedCookieControls",
+  // Disables the Discover feed on NTP.
+  "--disable-features=InterestFeedContentSuggestions",
+  // Disable the Chrome Media Router which creates some background
+  // network activity to discover castable targets.
+  "--disable-features=MediaRouter",
+  // Disable the Chrome Optimization Guide and networking with its
+  // service API.
+  "--disable-features=OptimizationHints",
+  "--disable-features=site-per-process",
+  // Disables Chrome translation, both the manual option and the popup
+  // prompt when a page with differing language is detected.
+  "--disable-features=Translate",
   "--disable-features=TranslateUI",
   "--disable-gpu",
+  // Suppresses hang monitor dialogs in renderer processes. This flag
+  // may allow slow unload handlers on a page to prevent the tab from
+  // closing.
   "--disable-hang-monitor",
+  // Some javascript functions can be used to flood the browser process
+  // with IPC. By default, protection is on to limit the number of IPC
+  // sent to 10 per second per frame. This flag disables it.
   "--disable-ipc-flooding-protection",
-  "--disable-popup-blocking",
+  // Disables the Web Notification and the Push APIs.
+  "--disable-notifications",
+  // Make the values returned to window.performance.memory bucketized
+  // and updated less frequently.
+  "--disable-precise-memory-info",
+  // Reloading a page that came from a POST normally prompts the user.
   "--disable-prompt-on-repost",
+  // This disables non-foreground tabs from getting a lower process
+  // priority This doesn't (on its own) affect timers or painting
+  // behavior.
   "--disable-renderer-backgrounding",
   "--disable-setuid-sandbox",
+  "--disable-site-isolation-trials",
+  // Disable syncing to a Google account.
   "--disable-sync",
+  // Disable a few things considered not appropriate for automation.
   "--enable-automation",
   "--enable-features=NetworkService,NetworkServiceInProcess",
-  "--headless",
+  // Logging behavior slightly more appropriate for a server-type process.
+  "--enable-logging=stderr",
+  // New, native Headless mode.
+  "--headless=new",
+  // Hide scrollbars from screenshots.
   "--hide-scrollbars",
   "--incognito",
   "--lang=en_US",
+  // 0 means INFO and higher. 2 is the most verbose.
+  "--log-level=0",
+  // Disable reporting to UMA, but allows for collection.
   "--metrics-recording-only",
+  // Mute any audio.
   "--mute-audio",
+  // Disable the default browser check, do not prompt to set it as such.
+  "--no-default-browser-check",
+  // Skip first run wizards.
   "--no-first-run",
+  // Don't send hyperlink auditing pings.
+  "--no-pings",
   // `--no-sandbox` is required in case we are running as root and we do
   // not want to impose arbitrary restrictions.
   "--no-sandbox",
+  // Disables the service process from adding itself as an autorun
+  // process. This does not delete existing autorun registrations, it
+  // just prevents the service from registering a new one.
+  "--no-service-autorun",
+  // Avoid potential instability of using Gnome Keyring or KDE wallet.
   "--password-store=basic",
+  // Runs the renderer and plugins in the same process as the browser.
+  "--single-process",
+  // Use mock keychain on Mac to prevent the blocking permissions
+  // dialog.
   "--use-mock-keychain",
 ];
 
