@@ -1,3 +1,8 @@
+Unreleased
+----------
+- Adjusted `chromedriver` flags
+
+
 0.2.4
 -----
 - Fixed leakage of temporary Chrome data directory

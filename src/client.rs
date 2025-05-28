@@ -42,7 +42,7 @@ pub struct ScreenshotOpts {
 
 /// Arguments to be passed to Chrome by default.
 /// See https://gist.github.com/rihardn/47b8e6170dc8f57a998c90b12a3e01bb
-static CHROME_ARGS: [&str; 53] = [
+static CHROME_ARGS: [&str; 55] = [
   // All pop-ups and calls to window.open will fail.
   "--block-new-web-contents",
   // Disable various background network services, including extension
@@ -126,6 +126,14 @@ static CHROME_ARGS: [&str; 53] = [
   "--disable-site-isolation-trials",
   // Disable syncing to a Google account.
   "--disable-sync",
+  "--disable-threaded-animation",
+  // Disable multithreaded GPU compositing of web content.
+  //
+  // Note: This flag seems to have the potential to cause total havoc,
+  //       with nothing being displayed or done at all. Probably not
+  //       wise to enable it.
+  //"--disable-threaded-compositing",
+  "--disable-threaded-scrolling",
   // Disable a few things considered not appropriate for automation.
   "--enable-automation",
   "--enable-features=NetworkService,NetworkServiceInProcess",
