@@ -42,7 +42,7 @@ pub struct ScreenshotOpts {
 
 /// Arguments to be passed to Chrome by default.
 /// See https://gist.github.com/rihardn/47b8e6170dc8f57a998c90b12a3e01bb
-static CHROME_ARGS: [&str; 55] = [
+static CHROME_ARGS: [&str; 54] = [
   // All pop-ups and calls to window.open will fail.
   "--block-new-web-contents",
   // Disable various background network services, including extension
@@ -139,8 +139,6 @@ static CHROME_ARGS: [&str; 55] = [
   "--enable-features=NetworkService,NetworkServiceInProcess",
   // Logging behavior slightly more appropriate for a server-type process.
   "--enable-logging=stderr",
-  // New, native Headless mode.
-  "--headless=new",
   // Hide scrollbars from screenshots.
   "--hide-scrollbars",
   "--incognito",
@@ -175,16 +173,24 @@ static CHROME_ARGS: [&str; 55] = [
 
 
 /// A builder for configurable construction of [`Client`] objects.
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct Builder {
   /// The user agent to use.
   user_agent: Option<String>,
+  /// Whether to run in headless mode or not.
+  headless: bool,
 }
 
 impl Builder {
   /// Set/reset the user agent to use.
   pub fn set_user_agent(mut self, user_agent: Option<String>) -> Self {
     self.user_agent = user_agent;
+    self
+  }
+
+  /// Set whether to use headless mode or not.
+  pub fn set_headless(mut self, headless: bool) -> Self {
+    self.headless = headless;
     self
   }
 
@@ -198,6 +204,11 @@ impl Builder {
     if let Some(user_agent) = &self.user_agent {
       user_agent_arg = format!("--user-agent={user_agent}");
       let () = args.push(&user_agent_arg);
+    }
+
+    if self.headless {
+      // New, native Headless mode.
+      let () = args.push("--headless=new");
     }
 
     let opts = json!({"args": args});
@@ -226,6 +237,15 @@ impl Builder {
       data_dir,
     };
     Ok(slf)
+  }
+}
+
+impl Default for Builder {
+  fn default() -> Self {
+    Self {
+      user_agent: None,
+      headless: true,
+    }
   }
 }
 

@@ -5,9 +5,11 @@ mod args;
 
 use std::env::args_os;
 use std::ffi::OsString;
+use std::io::stdin;
 use std::path::PathBuf;
 
 use anyhow::Context as _;
+use anyhow::Error;
 use anyhow::Result;
 
 use clap::Parser as _;
@@ -19,15 +21,17 @@ use shave::Client;
 use tokio::fs::write;
 use tokio::io::stdout;
 use tokio::io::AsyncWriteExt as _;
+use tokio::task::spawn_blocking;
 
 use crate::args::Args;
 use crate::args::Command;
+use crate::args::Launch;
 use crate::args::Output;
 use crate::args::Screenshot;
 
 
 /// Handler for the `screenshot` command.
-async fn screenshot(mut client: Client, screenshot: Screenshot) -> Result<()> {
+async fn screenshot(client: &mut Client, screenshot: Screenshot) -> Result<()> {
   let Screenshot {
     url,
     window_size,
@@ -45,13 +49,10 @@ async fn screenshot(mut client: Client, screenshot: Screenshot) -> Result<()> {
     _non_exhaustive: (),
   };
 
-  let result = client.screenshot(&url, &opts).await;
-  let () = client
-    .destroy()
+  let screenshot = client
+    .screenshot(&url, &opts)
     .await
-    .context("failed to destroy `shave` client")?;
-  let screenshot = result.with_context(|| format!("failed to capture screenshot of `{url}`"))?;
-
+    .with_context(|| format!("failed to capture screenshot of `{url}`"))?;
   let output = output.unwrap_or_else(|| {
     let now = Local::now();
     let path = PathBuf::from(format!("screenshot-{}.png", now.format("%+")));
@@ -67,6 +68,20 @@ async fn screenshot(mut client: Client, screenshot: Screenshot) -> Result<()> {
       .await
       .context("failed to write screenshot data to stdout"),
   }
+}
+
+/// Handler for the `launch` command.
+async fn launch(_client: &mut Client, launch: Launch) -> Result<()> {
+  let Launch {} = launch;
+  let () = spawn_blocking(|| {
+    let mut buffer = String::new();
+    let _count = stdin().read_line(&mut buffer)?;
+    Result::<_, Error>::Ok(())
+  })
+  .await
+  .unwrap()
+  .context("failed to wait for user input")?;
+  Ok(())
 }
 
 /// Run the program and report errors, if any.
@@ -86,15 +101,23 @@ where
     },
   };
 
-  let client = shave::Client::builder()
+  let mut client = shave::Client::builder()
     .set_user_agent(args.user_agent)
+    .set_headless(!matches!(args.command, Command::Launch(..)))
     .build()
     .await
     .context("failed to instantiate `shave` client")?;
 
-  match args.command {
-    Command::Screenshot(screenshot) => self::screenshot(client, screenshot).await,
-  }
+  let result = match args.command {
+    Command::Screenshot(screenshot) => self::screenshot(&mut client, screenshot).await,
+    Command::Launch(launch) => self::launch(&mut client, launch).await,
+  };
+
+  let () = client
+    .destroy()
+    .await
+    .context("failed to destroy `shave` client")?;
+  result
 }
 
 #[tokio::main(flavor = "current_thread")]

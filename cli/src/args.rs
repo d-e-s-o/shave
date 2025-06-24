@@ -1,4 +1,4 @@
-// Copyright (C) 2024 Daniel Mueller <deso@posteo.net>
+// Copyright (C) 2024-2025 Daniel Mueller <deso@posteo.net>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 use std::path::PathBuf;
@@ -72,6 +72,11 @@ pub(crate) struct Args {
 pub(crate) enum Command {
   /// Capture a screenshot of the rendered page (or part of it).
   Screenshot(Screenshot),
+  /// Launch the browser in non-headless mode and wait for user input
+  /// before shutting it down again.
+  ///
+  /// This command is mostly meant for debugging purposes.
+  Launch(Launch),
 }
 
 /// A type representing the `screenshot` command.
@@ -100,6 +105,10 @@ pub(crate) struct Screenshot {
   #[clap(short, long)]
   pub output: Option<Output>,
 }
+
+/// A type representing the `launch` command.
+#[derive(Debug, Arguments)]
+pub(crate) struct Launch {}
 
 
 #[cfg(test)]
