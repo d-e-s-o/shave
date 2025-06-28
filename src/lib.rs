@@ -1,12 +1,7 @@
-// Copyright (C) 2024 Daniel Mueller <deso@posteo.net>
+// Copyright (C) 2024-2025 Daniel Mueller <deso@posteo.net>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-#![allow(
-  clippy::collapsible_if,
-  clippy::fn_to_numeric_cast,
-  clippy::let_and_return,
-  clippy::let_unit_value
-)]
+//! A library for ~~scraping~~ shaving data from websites.
 
 mod client;
 

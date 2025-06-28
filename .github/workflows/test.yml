@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Daniel Mueller <deso@posteo.net>
+# Copyright (C) 2024-2025 Daniel Mueller <deso@posteo.net>
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 name: Test
@@ -48,8 +48,8 @@ jobs:
       - name: Install minimum Rust
         uses: dtolnay/rust-toolchain@master
         with:
-          # Please adjust README and rust-version field in Cargo.toml files when
-          # bumping version.
+          # Please adjust README, .clippy.toml, and rust-version field
+          # in Cargo.toml when bumping version.
           toolchain: 1.63
       - name: Build
         run: cargo build

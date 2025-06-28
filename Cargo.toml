@@ -4,6 +4,37 @@ members = [
   "cli",
 ]
 
+[workspace.lints.rust]
+deprecated-safe = "warn"
+future-incompatible = "warn"
+keyword-idents = "warn"
+let-underscore = "warn"
+missing-debug-implementations = "warn"
+missing-docs = "warn"
+trivial-numeric-casts = "warn"
+unsafe-op-in-unsafe-fn = "warn"
+unused = "warn"
+
+[workspace.lints.clippy]
+collapsible-else-if = "allow"
+collapsible-if = "allow"
+let-and-return = "allow"
+let-unit-value = "allow"
+module-inception = "allow"
+type-complexity = "allow"
+absolute-paths = "warn"
+allow-attributes = "warn"
+clone-on-ref-ptr = "warn"
+dbg-macro = "warn"
+derive-partial-eq-without-eq = "warn"
+doc-markdown = "warn"
+join-absolute-paths = "warn"
+large-enum-variant = "warn"
+redundant-closure-for-method-calls = "warn"
+unchecked-duration-subtraction = "warn"
+uninlined-format-args = "warn"
+wildcard-imports = "warn"
+
 [package]
 name = "shave"
 version = "0.2.4"
@@ -44,10 +75,13 @@ panic = "abort"
 
 [dependencies]
 anyhow = { version = "1.0.80", default-features = false, features = ["std"] }
-chromedriver-launch = { version = "0.1", default-features = false }
+chromedriver-launch = { version = "0.1.1", default-features = false }
 fantoccini = { version = "0.21", default-features = false }
 hyper-util = { version = "0.1.6", default-features = false, features = ["client-legacy"] }
 libc = { version = "0.2", default-features = false }
 serde_json = { version = "1.0.114", default-features = false, features = ["std"] }
 tempfile = { version = "3.2", default-features = false }
 tokio = { version = "1.13", default-features = false, features = ["time"] }
+
+[lints]
+workspace = true

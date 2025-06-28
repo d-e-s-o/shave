@@ -84,7 +84,7 @@ pub(crate) enum Command {
 pub(crate) struct Screenshot {
   /// The URL to navigate to.
   pub url: String,
-  /// The dimensions (WxH) of the window to configure, in pixels.
+  /// The dimensions (W x H) of the window to configure, in pixels.
   #[clap(short, long, value_parser = parse_window_size)]
   pub window_size: Option<(usize, usize)>,
   /// The CSS selector describing an element to wait for before

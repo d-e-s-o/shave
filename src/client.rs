@@ -41,7 +41,7 @@ pub struct ScreenshotOpts {
 
 
 /// Arguments to be passed to Chrome by default.
-/// See https://gist.github.com/rihardn/47b8e6170dc8f57a998c90b12a3e01bb
+/// See <https://gist.github.com/rihardn/47b8e6170dc8f57a998c90b12a3e01bb>
 static CHROME_ARGS: [&str; 54] = [
   // All pop-ups and calls to window.open will fail.
   "--block-new-web-contents",
@@ -251,6 +251,7 @@ impl Default for Builder {
 
 
 /// A client for shaving data of websites.
+#[derive(Debug)]
 pub struct Client {
   /// The Chromedriver process.
   chromedriver: Chromedriver,

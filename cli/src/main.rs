@@ -1,6 +1,8 @@
 // Copyright (C) 2024-2025 Daniel Mueller <deso@posteo.net>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+//! A command line interface for the `shave` library.
+
 mod args;
 
 use std::env::args_os;
@@ -94,7 +96,7 @@ where
     Ok(args) => args,
     Err(err) => match err.kind() {
       clap::error::ErrorKind::DisplayHelp | clap::error::ErrorKind::DisplayVersion => {
-        print!("{}", err);
+        print!("{err}");
         return Ok(())
       },
       _ => return Err(err.into()),
