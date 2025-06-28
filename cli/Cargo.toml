@@ -1,7 +1,28 @@
 [package]
 name = "shavecli"
-version = "0.0.0"
+version = "0.1.1"
 edition = "2021"
+license = "GPL-3.0-or-later"
+homepage = "https://github.com/d-e-s-o/shave"
+repository = "https://github.com/d-e-s-o/shave.git"
+readme = "README.md"
+categories = [
+  "accessibility",
+  "api-bindings",
+  "asynchronous",
+  "multimedia::images",
+  "web-programming",
+]
+keywords = [
+  "async",
+  "html",
+  "image",
+  "scraping",
+  "web",
+]
+description = """
+A command line interface for the shave library.
+"""
 default-run = "shavecli"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -20,7 +41,7 @@ anyhow = { version = "1.0", default-features = false, features = ["std"] }
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
 clap = { version = "4.2", default-features = false, features = ["color", "derive", "error-context", "help", "std", "suggestions", "usage"] }
 clap_complete = { version = "4.2", default-features = false, optional = true }
-shave = { version = "0.2", path = "../", default-features = false }
+shave = { version = "0.2.5", path = "../", default-features = false }
 tokio = { version = "1.0", default-features = false, features = ["fs", "io-std", "io-util", "macros", "rt"] }
 
 [lints]

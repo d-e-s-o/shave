@@ -1,5 +1,5 @@
-Unreleased
-----------
+0.1.1
+-----
 - Introduced `launch` command for just launching Chrome as automation
   would
 - Added `--user-agent` option for configuring the user agent to use
