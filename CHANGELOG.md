@@ -1,5 +1,5 @@
-Unreleased
-----------
+0.2.5
+-----
 - Added `Builder::set_headless` method
 - Adjusted `chromedriver` flags
 
