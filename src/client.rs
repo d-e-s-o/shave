@@ -324,7 +324,7 @@ impl Client {
     }
 
     if let Some(remove_selector) = remove_selector {
-      // Definitely vulnerable to code injection here ¯\_(°ペ)_/¯
+      // Definitely vulnerable to code injection here ¯\_(ツ)_/¯
       let js = format!(
         r#"
         document
