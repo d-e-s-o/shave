@@ -64,3 +64,9 @@ jobs:
       run: cargo publish --package shavecli --token "${CARGO_REGISTRY_TOKEN}"
       env:
         CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+  build-artifacts:
+    needs: [publish, version]
+    uses: ./.github/workflows/build-cli.yml
+    secrets: inherit
+    with:
+      upload-release: cli-v${{ needs.version.outputs.version }}

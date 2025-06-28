@@ -1,6 +1,13 @@
 name: Build shavecli
 
 on:
+  workflow_call:
+    inputs:
+      upload-release:
+        description: 'The release to upload artifacts to, if any'
+        default: ''
+        required: false
+        type: string
   workflow_dispatch:
 
 jobs:
@@ -23,3 +30,10 @@ jobs:
         with:
           name: shavecli-${{ matrix.target }}
           path: bin/shavecli
+      - if: ${{ inputs.upload-release != '' }}
+        name: Upload release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mv bin/shavecli shavecli-${{ matrix.target }}
+          gh release upload ${{ inputs.upload-release }} shavecli-${{ matrix.target }}
