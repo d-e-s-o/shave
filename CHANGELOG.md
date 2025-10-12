@@ -1,3 +1,8 @@
+Unreleased
+----------
+- Bumped minimum supported Rust version to `1.67`
+
+
 0.2.5
 -----
 - Added `Builder::set_headless` method
