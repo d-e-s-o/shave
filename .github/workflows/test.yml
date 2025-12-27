@@ -37,22 +37,6 @@ jobs:
       run: |
         cargo build --profile=${{ matrix.profile }} --all-targets
         cargo test --profile=${{ matrix.profile }} --all-targets
-  build-minimum:
-    name: Build using minimum versions of dependencies
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - name: Install Nightly Rust
-        uses: dtolnay/rust-toolchain@nightly
-      - run: cargo +nightly -Z minimal-versions update
-      - name: Install minimum Rust
-        uses: dtolnay/rust-toolchain@master
-        with:
-          # Please adjust README, .clippy.toml, and rust-version field
-          # in Cargo.toml when bumping version.
-          toolchain: 1.81
-      - name: Build
-        run: cargo build
   clippy:
     name: Lint with clippy
     runs-on: ubuntu-latest

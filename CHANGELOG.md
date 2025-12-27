@@ -1,6 +1,6 @@
 Unreleased
 ----------
-- Bumped minimum supported Rust version to `1.81`
+- Removed MSRV checks and assurances
 
 
 0.2.5
