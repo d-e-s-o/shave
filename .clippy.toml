@@ -1,7 +1,7 @@
 # For general information about this file, check
 # https://doc.rust-lang.org/stable/clippy/configuration.html
 
-msrv = "1.67"
+msrv = "1.81"
 
 absolute-paths-allowed-crates = [ "clap" ]
 doc-valid-idents = [
