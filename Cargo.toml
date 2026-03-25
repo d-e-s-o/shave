@@ -75,7 +75,7 @@ panic = "abort"
 [dependencies]
 anyhow = { version = "1.0.80", default-features = false, features = ["std"] }
 chromedriver-launch = { version = "0.1.1", default-features = false }
-fantoccini = { version = "0.21", default-features = false }
+fantoccini = { version = "0.22", default-features = false }
 hyper-util = { version = "0.1.6", default-features = false, features = ["client-legacy"] }
 libc = { version = "0.2", default-features = false }
 serde_json = { version = "1.0.114", default-features = false, features = ["std"] }
