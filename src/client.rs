@@ -1,4 +1,4 @@
-// Copyright (C) 2024-2025 Daniel Mueller <deso@posteo.net>
+// Copyright (C) 2024-2026 Daniel Mueller <deso@posteo.net>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 use std::net::SocketAddr;
@@ -211,7 +211,7 @@ impl Builder {
       let () = args.push("--headless=new");
     }
 
-    let opts = json!({"args": args});
+    let opts = json!({"args": args, "w3c": true});
     let mut capabilities = Capabilities::new();
     let _val = capabilities.insert("goog:chromeOptions".to_string(), opts);
 
