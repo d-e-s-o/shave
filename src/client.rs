@@ -42,7 +42,7 @@ pub struct ScreenshotOpts {
 
 /// Arguments to be passed to Chrome by default.
 /// See <https://gist.github.com/rihardn/47b8e6170dc8f57a998c90b12a3e01bb>
-static CHROME_ARGS: [&str; 54] = [
+static CHROME_ARGS: [&str; 53] = [
   // All pop-ups and calls to window.open will fail.
   "--block-new-web-contents",
   // Disable various background network services, including extension
@@ -102,7 +102,6 @@ static CHROME_ARGS: [&str; 54] = [
   // prompt when a page with differing language is detected.
   "--disable-features=Translate",
   "--disable-features=TranslateUI",
-  "--disable-gpu",
   // Suppresses hang monitor dialogs in renderer processes. This flag
   // may allow slow unload handlers on a page to prevent the tab from
   // closing.
