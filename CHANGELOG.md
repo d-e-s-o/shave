@@ -1,5 +1,5 @@
-Unreleased
-----------
+0.2.6
+-----
 - Request W3C compatibility from Chromedriver process
 - Removed MSRV checks and assurances
 
