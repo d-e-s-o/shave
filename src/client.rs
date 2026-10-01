@@ -42,7 +42,7 @@ pub struct ScreenshotOpts {
 
 /// Arguments to be passed to Chrome by default.
 /// See <https://gist.github.com/rihardn/47b8e6170dc8f57a998c90b12a3e01bb>
-static CHROME_ARGS: [&str; 53] = [
+static CHROME_ARGS: &[&str] = &[
   // All pop-ups and calls to window.open will fail.
   "--block-new-web-contents",
   // Disable various background network services, including extension
