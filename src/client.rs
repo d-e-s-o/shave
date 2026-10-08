@@ -9,6 +9,7 @@ use anyhow::Result;
 
 use chromedriver_launch::Chromedriver;
 
+use fantoccini::cookies::Cookie;
 use fantoccini::wd::Capabilities;
 use fantoccini::Client as WebdriverClient;
 use fantoccini::ClientBuilder;
@@ -26,6 +27,8 @@ use tempfile::TempDir;
 pub struct ScreenshotOpts {
   /// The dimensions of the window to configure, in pixels.
   pub window_size: Option<(usize, usize)>,
+  /// Cookies to set.
+  pub cookies: Vec<(String, String)>,
   /// The CSS selector describing an element to wait for before
   /// capturing a screenshot.
   pub await_selector: Option<String>,
@@ -299,6 +302,7 @@ impl Client {
   pub async fn screenshot(&mut self, url: &str, opts: &ScreenshotOpts) -> Result<Vec<u8>> {
     let ScreenshotOpts {
       window_size,
+      cookies,
       await_selector,
       remove_selector,
       selector,
@@ -313,6 +317,39 @@ impl Client {
       .goto(url)
       .await
       .with_context(|| format!("failed to navigate to {url}"))?;
+
+    if !cookies.is_empty() {
+      let current_url = self
+        .webdriver
+        .current_url()
+        .await
+        .context("failed to retrieve back parsed URL")?;
+      let domain = current_url
+        .host_str()
+        .context("failed to query URL host/domain")?;
+
+      for (name, value) in cookies {
+        let cookie = Cookie::build((name, value))
+          .domain(domain)
+          .path("/")
+          .build()
+          .into_owned();
+        let () = self
+          .webdriver
+          .add_cookie(cookie)
+          .await
+          .with_context(|| format!("failed to set cookie `{name}`"))?;
+      }
+
+      // Need to redo navigation, because the WebDriver protocol only
+      // allows setting cookies retroactively, but changes obviously
+      // won't go into effect immediately.
+      let () = self
+        .webdriver
+        .refresh()
+        .await
+        .context("failed to reload page")?;
+    }
 
     if let Some(await_selector) = await_selector {
       let _elem = self

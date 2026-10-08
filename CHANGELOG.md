@@ -1,3 +1,8 @@
+Unreleased
+----------
+- Added `ScreenshotOpts::cookies` attribute for setting cookies
+
+
 0.2.6
 -----
 - Request W3C compatibility from Chromedriver process
