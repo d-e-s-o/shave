@@ -56,6 +56,14 @@ fn parse_window_size(s: &str) -> Result<(usize, usize)> {
   Ok((w, h))
 }
 
+fn parse_cookie(s: &str) -> Result<(String, String)> {
+  let (name, value) = s
+    .split_once('=')
+    .with_context(|| format!("failed to parse cookie `{s}`: expected NAME=VALUE"))?;
+
+  Ok((name.to_owned(), value.to_owned()))
+}
+
 
 /// A program for shaving data from a URL.
 #[derive(Debug, Parser)]
@@ -87,6 +95,9 @@ pub(crate) struct Screenshot {
   /// The dimensions (W x H) of the window to configure, in pixels.
   #[clap(short, long, value_parser = parse_window_size)]
   pub window_size: Option<(usize, usize)>,
+  /// Set one or more cookies (can be supplied multiple times).
+  #[clap(long = "cookie", value_name = "NAME=VALUE", value_parser = parse_cookie)]
+  pub cookies: Vec<(String, String)>,
   /// The CSS selector describing an element to wait for before
   /// capturing a screenshot.
   #[clap(short, long)]

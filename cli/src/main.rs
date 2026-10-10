@@ -37,6 +37,7 @@ async fn screenshot(client: &mut Client, screenshot: Screenshot) -> Result<()> {
   let Screenshot {
     url,
     window_size,
+    cookies,
     await_selector,
     remove_selector,
     selector,
@@ -45,6 +46,7 @@ async fn screenshot(client: &mut Client, screenshot: Screenshot) -> Result<()> {
 
   let opts = shave::ScreenshotOpts {
     window_size,
+    cookies,
     await_selector,
     remove_selector,
     selector,

@@ -1,3 +1,9 @@
+Unreleased
+----------
+- Added `--cookie` option to `screenshot` sub-command for setting one or
+  more cookies
+
+
 0.1.1
 -----
 - Introduced `launch` command for just launching Chrome as automation
