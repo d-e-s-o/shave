@@ -362,16 +362,16 @@ impl Client {
 
     if let Some(remove_selector) = remove_selector {
       // Definitely vulnerable to code injection here ¯\_(ツ)_/¯
-      let js = format!(
-        r#"
-        document
-          .querySelectorAll('{remove_selector}')
-          .forEach(function(node){{node.parentNode.removeChild(node)}})
-      "#
-      );
       let _output = self
         .webdriver
-        .execute(&js, Vec::new())
+        .execute(
+          r#"
+            document
+              .querySelectorAll(arguments[0])
+              .forEach(function(node){{node.parentNode.removeChild(node)}})
+          "#,
+          vec![remove_selector.clone().into()],
+        )
         .await
         .with_context(|| format!("failed to remove `{remove_selector}`"))?;
     }
