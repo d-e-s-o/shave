@@ -1,5 +1,7 @@
 Unreleased
 ----------
+- Added `ScreenshotOpts::local_storage` attribute for setting local
+  storage value
 - Added `ScreenshotOpts::cookies` attribute for setting cookies
 
 

@@ -27,6 +27,8 @@ use tempfile::TempDir;
 pub struct ScreenshotOpts {
   /// The dimensions of the window to configure, in pixels.
   pub window_size: Option<(usize, usize)>,
+  /// Local storage to populate.
+  pub local_storage: Vec<(String, String)>,
   /// Cookies to set.
   pub cookies: Vec<(String, String)>,
   /// The CSS selector describing an element to wait for before
@@ -302,6 +304,7 @@ impl Client {
   pub async fn screenshot(&mut self, url: &str, opts: &ScreenshotOpts) -> Result<Vec<u8>> {
     let ScreenshotOpts {
       window_size,
+      local_storage,
       cookies,
       await_selector,
       remove_selector,
@@ -317,6 +320,23 @@ impl Client {
       .goto(url)
       .await
       .with_context(|| format!("failed to navigate to {url}"))?;
+
+    let mut refresh = false;
+
+    if !local_storage.is_empty() {
+      for (name, value) in local_storage {
+        let _output = self
+          .webdriver
+          .execute(
+            "window.localStorage.setItem(arguments[0], arguments[1]);",
+            vec![name.clone().into(), value.clone().into()],
+          )
+          .await
+          .with_context(|| format!("failed to populate local storage value `{name}`"))?;
+      }
+
+      refresh = true;
+    }
 
     if !cookies.is_empty() {
       let current_url = self
@@ -341,9 +361,13 @@ impl Client {
           .with_context(|| format!("failed to set cookie `{name}`"))?;
       }
 
+      refresh = true;
+    }
+
+    if refresh {
       // Need to redo navigation, because the WebDriver protocol only
-      // allows setting cookies retroactively, but changes obviously
-      // won't go into effect immediately.
+      // allows setting local storage/cookies retroactively, but changes
+      // obviously won't go into effect immediately.
       let () = self
         .webdriver
         .refresh()
