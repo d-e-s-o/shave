@@ -56,10 +56,10 @@ fn parse_window_size(s: &str) -> Result<(usize, usize)> {
   Ok((w, h))
 }
 
-fn parse_cookie(s: &str) -> Result<(String, String)> {
+fn parse_key_value(s: &str) -> Result<(String, String)> {
   let (name, value) = s
     .split_once('=')
-    .with_context(|| format!("failed to parse cookie `{s}`: expected NAME=VALUE"))?;
+    .with_context(|| format!("failed to parse key-value pair `{s}`: expected NAME=VALUE"))?;
 
   Ok((name.to_owned(), value.to_owned()))
 }
@@ -95,8 +95,12 @@ pub(crate) struct Screenshot {
   /// The dimensions (W x H) of the window to configure, in pixels.
   #[clap(short, long, value_parser = parse_window_size)]
   pub window_size: Option<(usize, usize)>,
+  /// Set one or more key-value pairs in local storage (can be supplied
+  /// multiple times).
+  #[clap(long = "local-storage-pair", value_name = "NAME=VALUE", value_parser = parse_key_value)]
+  pub local_storage: Vec<(String, String)>,
   /// Set one or more cookies (can be supplied multiple times).
-  #[clap(long = "cookie", value_name = "NAME=VALUE", value_parser = parse_cookie)]
+  #[clap(long = "cookie", value_name = "NAME=VALUE", value_parser = parse_key_value)]
   pub cookies: Vec<(String, String)>,
   /// The CSS selector describing an element to wait for before
   /// capturing a screenshot.

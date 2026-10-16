@@ -1,5 +1,7 @@
 Unreleased
 ----------
+- Added `--local-storage-pair` option to `screenshot` sub-command for
+  setting one or more local storage values
 - Added `--cookie` option to `screenshot` sub-command for setting one or
   more cookies
 
